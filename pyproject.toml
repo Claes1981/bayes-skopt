@@ -26,7 +26,7 @@ numpy = ">=1.16"
 # scikit-learn<0.24 deprecates a few functions, which are to be removed in 0.24.
 # As soon as 0.24 is released, this restriction will be retested:
 scikit-learn = ">=0.22"
-scikit-optimize = "^0.8.1"
+scikit-optimize = ">=0.8.1"
 scipy = ">=1.2"
 tqdm = ">=4.48.2"
 
