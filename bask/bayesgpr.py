@@ -12,6 +12,8 @@ from skopt.learning.gaussian_process.kernels import WhiteKernel
 
 from .utils import geometric_median, guess_priors, validate_zeroone
 
+from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN
+
 __all__ = ["BayesGPR"]
 
 
@@ -477,6 +479,12 @@ class BayesGPR(GaussianProcessRegressor):
 
         n_dim = len(self.theta)
         n_walkers = n_threads * n_walkers_per_thread
+        n_desired_samples = int(
+            (Decimal(n_desired_samples) / n_walkers_per_thread).to_integral_value(
+                rounding=ROUND_HALF_UP
+            )
+            * n_walkers_per_thread
+        ) # If desired samples is not a multiple of number of walkers, adjust to nearest multiple. Source: Stackoverflow.com
         n_samples = int(np.ceil(n_desired_samples / n_walkers) + n_burnin)
         pos = None
         if position is not None:
