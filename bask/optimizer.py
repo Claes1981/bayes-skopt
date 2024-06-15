@@ -233,6 +233,7 @@ class Optimizer:
         n_samples=0,
         gp_samples=100,
         gp_burnin=10,
+        n_walkers_per_thread=100,
         progress=False,
     ):
         """Inform the optimizer about the objective function at discrete points.
@@ -335,6 +336,7 @@ class Optimizer:
                         priors=self.gp_priors,
                         n_desired_samples=gp_samples,
                         n_burnin=gp_burnin,
+                        n_walkers_per_thread=n_walkers_per_thread,
                         progress=progress,
                     )
                 else:
@@ -345,6 +347,7 @@ class Optimizer:
                         priors=self.gp_priors,
                         n_desired_samples=gp_samples,
                         n_burnin=gp_burnin,
+                        n_walkers_per_thread=n_walkers_per_thread,
                         progress=progress,
                     )
 
