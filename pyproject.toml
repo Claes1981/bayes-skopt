@@ -22,9 +22,9 @@ python = ">=3.8"
 arviz = ">=0.10.0"
 emcee = ">=3.0.2"
 matplotlib = ">=3.3.0"
-numpy = ">=1.16,<1.24"
+numpy = ">=1.16,<2"
 scikit-learn = "^1"
-scikit-optimize = ">=0.9"
+scikit-optimize = { git = "https://github.com/Claes1981/scikit-optimize.git" }
 scipy = ">=1.2"
 tqdm = ">=4.48.2"
 
