@@ -1,6 +1,9 @@
 from collections.abc import Iterable
 from contextlib import contextmanager, nullcontext
 
+import os
+from multiprocessing import Pool
+
 import emcee as mc
 import numpy as np
 import scipy.stats as st
@@ -375,7 +378,7 @@ class BayesGPR(GaussianProcessRegressor):
         X=None,
         y=None,
         noise_vector=None,
-        n_threads=1,
+        n_threads=4,
         n_desired_samples=100,
         n_burnin=0,
         n_thin=1,
@@ -502,19 +505,23 @@ class BayesGPR(GaussianProcessRegressor):
             pos = [
                 theta + 1e-2 * self.random_state.randn(n_dim) for _ in range(n_walkers)
             ]
-        self._sampler = mc.EnsembleSampler(
-            nwalkers=n_walkers,
-            ndim=n_dim,
-            log_prob_fn=self._log_prob_fn,
-            kwargs=dict(priors=priors, warp_priors=warp_priors),
-            threads=n_threads,
-            **kwargs
-        )
-        rng = np.random.RandomState(
-            self.random_state.randint(0, np.iinfo(np.int32).max)
-        )
-        self._sampler.random_state = rng.get_state()
-        pos, prob, state = self._sampler.run_mcmc(pos, n_samples, progress=progress)
+        os.environ["OMP_NUM_THREADS"] = "1" # Don't let NumPy's parallelization interfer with Emcee's.
+        with Pool() as pool:
+            self._sampler = mc.EnsembleSampler(
+                nwalkers=n_walkers,
+                ndim=n_dim,
+                log_prob_fn=self._log_prob_fn,
+                pool=pool,
+                kwargs=dict(priors=priors, warp_priors=warp_priors),
+                # threads=n_threads,  #deprecated?
+                **kwargs
+                )
+            rng = np.random.RandomState(
+                self.random_state.randint(0, np.iinfo(np.int32).max)
+                )
+            self._sampler.random_state = rng.get_state()
+            pos, prob, state = self._sampler.run_mcmc(pos, n_samples, progress=progress)
+        del os.environ["OMP_NUM_THREADS"]
         # if backup_file is not None:
         #     with open(backup_file, "wb") as f:
         #         np.save(f, pos)
