@@ -378,7 +378,7 @@ class BayesGPR(GaussianProcessRegressor):
         X=None,
         y=None,
         noise_vector=None,
-        n_threads=4,
+        n_threads=1,
         n_desired_samples=100,
         n_burnin=0,
         n_thin=1,
