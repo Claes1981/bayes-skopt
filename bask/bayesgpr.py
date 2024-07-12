@@ -21,7 +21,7 @@ __all__ = ["BayesGPR"]
 
 
 class BayesGPR(GaussianProcessRegressor):
-    """ Gaussian process regressor of which the kernel hyperparameters are inferred in a
+    """Gaussian process regressor of which the kernel hyperparameters are inferred in a
     fully Bayesian framework.
 
     The implementation is based on Algorithm 2.1 of Gaussian Processes for Machine
@@ -223,7 +223,7 @@ class BayesGPR(GaussianProcessRegressor):
 
     @property
     def X_train_(self):
-        """ The training data which was used to train the Gaussian process.
+        """The training data which was used to train the Gaussian process.
 
         If input warping is used, it will return the warped instances.
 
@@ -487,7 +487,7 @@ class BayesGPR(GaussianProcessRegressor):
                 rounding=ROUND_HALF_UP
             )
             * n_walkers_per_thread
-        ) # If desired samples is not a multiple of number of walkers, adjust to nearest multiple. Source: Stackoverflow.com
+        )  # If desired samples is not a multiple of number of walkers, adjust to nearest multiple. Source: Stackoverflow.com
         n_samples = int(np.ceil(n_desired_samples / n_walkers) + n_burnin)
         pos = None
         if position is not None:
@@ -505,7 +505,9 @@ class BayesGPR(GaussianProcessRegressor):
             pos = [
                 theta + 1e-2 * self.random_state.randn(n_dim) for _ in range(n_walkers)
             ]
-        os.environ["OMP_NUM_THREADS"] = "1" # Don't let NumPy's parallelization interfer with Emcee's.
+        os.environ["OMP_NUM_THREADS"] = (
+            "1"  # Don't let NumPy's parallelization interfer with Emcee's.
+        )
         with Pool() as pool:
             self._sampler = mc.EnsembleSampler(
                 nwalkers=n_walkers,
@@ -515,10 +517,10 @@ class BayesGPR(GaussianProcessRegressor):
                 kwargs=dict(priors=priors, warp_priors=warp_priors),
                 # threads=n_threads,  #deprecated?
                 **kwargs
-                )
+            )
             rng = np.random.RandomState(
                 self.random_state.randint(0, np.iinfo(np.int32).max)
-                )
+            )
             self._sampler.random_state = rng.get_state()
             pos, prob, state = self._sampler.run_mcmc(pos, n_samples, progress=progress)
         del os.environ["OMP_NUM_THREADS"]
