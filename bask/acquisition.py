@@ -8,6 +8,8 @@ from sklearn.utils import check_random_state
 
 from bask.utils import get_progress_bar, validate_zeroone
 
+import cupy as cp
+
 __all__ = [
     "evaluate_acquisitions",
     "ExpectedImprovement",
@@ -319,7 +321,10 @@ class PVRS(FullGPAcquisition):
             K = gp.kernel_(X_train_aug)
             if np.iterable(gp.alpha):
                 K[np.diag_indices_from(K)] += np.concatenate([gp.alpha, [0.0]])
-            L = cholesky(K, lower=True)
+            K_gpu=cp.asarray(K)
+            # L = cholesky(K, lower=True)
+            L_gpu = cp.linalg.cholesky(K_gpu)
+            L = cp.asnumpy(L_gpu)
             K_trans = gp.kernel_(thompson_points, X_train_aug)
             v = cho_solve((L, True), K_trans.T)
             cov = K_trans.dot(v)
