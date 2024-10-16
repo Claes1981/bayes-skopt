@@ -491,7 +491,9 @@ class BayesGPR(GaussianProcessRegressor):
             )
             * n_walkers_per_thread
         )  # If desired samples is not a multiple of number of walkers, adjust to nearest multiple. Source: Stackoverflow.com
+        # print(f"n_desired_samples= {n_desired_samples}")
         n_samples = int(np.ceil(n_desired_samples / n_walkers) + n_burnin)
+        # print(f"n_samples= {n_samples}")
         pos = None
         if position is not None:
             pos = position
@@ -549,6 +551,9 @@ class BayesGPR(GaussianProcessRegressor):
             self.kernel_.theta, clone_kernel=False
         )
         self.pos_ = pos
+        # print(f"Mean acceptance fraction: {np.mean(self._sampler.acceptance_fraction)}")
+        # print(f"Integrated autocorrelation time estimates: {self._sampler.get_autocorr_time(quiet=True)}")
+        # print(f"autocorrelation time={self._sampler.get_autocorr_time(discard=n_burnin)}")
 
     def fit(
         self,

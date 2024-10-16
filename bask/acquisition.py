@@ -95,6 +95,7 @@ def evaluate_acquisitions(
 
     """
     n_cand_points = len(X)
+    # print(f"n_cand_points: {n_cand_points}")
     n_acqs = len(acquisition_functions)
     acq_output = np.zeros((n_acqs, n_cand_points))
     random_state = check_random_state(random_state)
@@ -110,6 +111,7 @@ def evaluate_acquisitions(
         if isinstance(acq, FullGPAcquisition):
             # We do not apply warping to X here, since the GP is doing that internally
             out = acq(X, gpr, random_state=random_state, **kwargs)
+            # print(f"Shape of out: {out.shape}")
             if np.all(np.isfinite(out)):
                 acq_output[i_acq] = out
     for i in trace_sample_i:
@@ -311,6 +313,9 @@ class PVRS(FullGPAcquisition):
 
     @profile
     def __call__(self, X, gp, *args, n_thompson=10, random_state=None, **kwargs):
+        # print(f"Shape of X: {X.shape}")
+        # print(f"dir(gp.kernel_): {dir(gp.kernel_)}")
+        # print(f"gp.kernel_.__dir__: {gp.kernel_.__dir__}")
         n = len(X)
         thompson_sample = gp.sample_y(
             X, sample_mean=True, n_samples=n_thompson, random_state=random_state
@@ -326,9 +331,11 @@ class PVRS(FullGPAcquisition):
             K = gp.kernel_(X_train_aug)
             if np.iterable(gp.alpha):
                 K[np.diag_indices_from(K)] += np.concatenate([gp.alpha, [0.0]])
+            # print(f"Shape of K: {K.shape}")
             K_gpu=cp.asarray(K)
             # L = cholesky(K, lower=True)
             L_gpu = cp.linalg.cholesky(K_gpu)
+            # print(f"L-L_gpu= {L-cp.asnumpy(L_gpu)}")
             L = cp.asnumpy(L_gpu)
             K_trans = gp.kernel_(thompson_points, X_train_aug)
             v = cho_solve((L, True), K_trans.T)
