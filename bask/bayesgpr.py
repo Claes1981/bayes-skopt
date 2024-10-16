@@ -17,6 +17,8 @@ from .utils import geometric_median, guess_priors, validate_zeroone
 
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN
 
+from line_profiler import profile
+
 __all__ = ["BayesGPR"]
 
 
@@ -343,6 +345,7 @@ class BayesGPR(GaussianProcessRegressor):
             alpha[: len(noise_vector)] += noise_vector
             self.alpha = alpha
 
+    @profile
     def _log_prob_fn(self, x, priors, warp_priors):
         lp = 0
         if self.warp_inputs:
@@ -634,6 +637,7 @@ class BayesGPR(GaussianProcessRegressor):
             X, return_std, return_cov, return_mean_grad, return_std_grad
         )
 
+    @profile
     def sample_y(self, X, sample_mean=False, noise=False, n_samples=1, random_state=0):
         """Sample function realizations of the Gaussian process.
 

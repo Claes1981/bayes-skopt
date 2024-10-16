@@ -10,6 +10,8 @@ from bask.utils import get_progress_bar, validate_zeroone
 
 import cupy as cp
 
+from line_profiler import profile
+
 __all__ = [
     "evaluate_acquisitions",
     "ExpectedImprovement",
@@ -47,6 +49,7 @@ class FullGPAcquisition(Acquisition, ABC):
         pass
 
 
+@profile
 def evaluate_acquisitions(
     X,
     gpr,
@@ -274,6 +277,7 @@ class VarianceReduction(FullGPAcquisition):
     uniformly estimate the target function and not only its optimum.
     """
 
+    @profile
     def __call__(self, X, gp, *args, **kwargs):
         n = len(X)
         if gp.warp_inputs:
@@ -305,6 +309,7 @@ class PVRS(FullGPAcquisition):
     Bayesian optimization at neural information processing systems (NIPSW). 2017.
     """
 
+    @profile
     def __call__(self, X, gp, *args, n_thompson=10, random_state=None, **kwargs):
         n = len(X)
         thompson_sample = gp.sample_y(
