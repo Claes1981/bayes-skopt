@@ -244,7 +244,12 @@ class MaxValueSearch(UncertaintyAcquisition):
         right = np.max(mean + 5 * std)
         # Binary search for 3 percentiles
         q1, med, q2 = [
-            brentq(lambda x: probf(x) - val, left, right,) for val in [0.25, 0.5, 0.75]
+            brentq(
+                lambda x: probf(x) - val,
+                left,
+                right,
+            )
+            for val in [0.25, 0.5, 0.75]
         ]
         beta = (q1 - q2) / (np.log(np.log(4.0 / 3.0)) - np.log(np.log(4.0)))
         alpha = med + beta * np.log(np.log(2.0))
@@ -332,7 +337,7 @@ class PVRS(FullGPAcquisition):
             if np.iterable(gp.alpha):
                 K[np.diag_indices_from(K)] += np.concatenate([gp.alpha, [0.0]])
             # print(f"Shape of K: {K.shape}")
-            K_gpu=cp.asarray(K)
+            K_gpu = cp.asarray(K)
             # L = cholesky(K, lower=True)
             L_gpu = cp.linalg.cholesky(K_gpu)
             # print(f"L-L_gpu= {L-cp.asnumpy(L_gpu)}")

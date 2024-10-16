@@ -363,7 +363,9 @@ class BayesGPR(GaussianProcessRegressor):
                     lp += warp_priors(a_log, b_log)
         else:
             x_gp = x
-        if isinstance(priors, Iterable): # priors: list of functions: noise, signal and each lengthscale
+        if isinstance(
+            priors, Iterable
+        ):  # priors: list of functions: noise, signal and each lengthscale
             for prior, val in zip(priors, x_gp):
                 lp += prior(val)
         else:  # Assume priors is a callable, which evaluates the log probability:
