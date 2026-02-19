@@ -26,7 +26,7 @@ dependencies = [
     "matplotlib>=3.9.0",
     "numpy>=2.0.0",
     "scikit-learn>=1.6",
-    "scikit-optimize>@ git+https://github.com/Claes1981/scikit-optimize.git@master",
+    "scikit-optimize @ git+https://github.com/Claes1981/scikit-optimize.git@master",
     "scipy>=1.13.0",
     "tqdm>=4.48.2",
 ]
