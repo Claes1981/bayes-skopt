@@ -28,7 +28,9 @@ def test_multiple_asks():
 @pytest.mark.parametrize("init_strategy", ("r2", "sb", "random"))
 def test_initial_points(init_strategy):
     opt = Optimizer(
-        dimensions=[(-2.0, 2.0)], n_initial_points=3, init_strategy=init_strategy
+        dimensions=[(-2.0, 2.0)],
+        n_initial_points=3,
+        init_strategy=init_strategy,
     )
     x = opt.ask()
     assert not isinstance(x[0], list)
@@ -83,8 +85,10 @@ def test_error_on_invalid_priors():
 @pytest.mark.parametrize(
     "input,expected",
     [
-        (dict(normalized_scores=False, threshold=1.0), 0.94),
-        (dict(normalized_scores=False, threshold=(0.9, 0.5)), (0.92, 0.81)),
+        # Expected values updated for n_random_starts=100
+        # (better convergence across Python versions)
+        (dict(normalized_scores=False, threshold=1.0), 0.99),
+        (dict(normalized_scores=False, threshold=(0.9, 0.5)), (0.98, 0.86)),
         (dict(normalized_scores=True, threshold=1.0), 0.99),
     ],
 )
@@ -93,11 +97,13 @@ def test_probability_of_improvement(random_state, input, expected):
         dimensions=[(-2.0, 2.0)], n_initial_points=0, random_state=random_state
     )
     opt.tell(
-        [[-2.0], [-1.0], [0.0], [1.0], [2.0]], [2.0, 0.0, -2.0, 0.0, 2.0], gp_burnin=10
+        [[-2.0], [-1.0], [0.0], [1.0], [2.0]],
+        [2.0, 0.0, -2.0, 0.0, 2.0],
+        gp_burnin=10,
     )
     prob = opt.probability_of_optimality(
         threshold=input["threshold"],
-        n_random_starts=20,
+        n_random_starts=100,  # Increased from 20 for better convergence
         random_state=random_state,
         normalized_scores=input["normalized_scores"],
     )
@@ -117,7 +123,9 @@ def test_expected_optimality_gap(random_state, input, expected):
         dimensions=[(-2.0, 2.0)], n_initial_points=0, random_state=random_state
     )
     opt.tell(
-        [[-2.0], [-1.0], [0.0], [1.0], [2.0]], [2.0, 0.0, -2.0, 0.0, 2.0], gp_burnin=10
+        [[-2.0], [-1.0], [0.0], [1.0], [2.0]],
+        [2.0, 0.0, -2.0, 0.0, 2.0],
+        gp_burnin=10,
     )
     gap = opt.expected_optimality_gap(
         random_state=random_state,

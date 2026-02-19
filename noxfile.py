@@ -1,16 +1,19 @@
 """Nox sessions."""
+
 from pathlib import Path
 from textwrap import dedent
 
 import nox
-from nox_poetry import session as noxsession
+from nox import Session
+from nox_uv import session
 
-locations = "bask", "noxfile.py"
+locations = ("bask", "tests", "noxfile.py")
 nox.options.sessions = ("pre-commit", "tests")
-python_versions = ["3.8", "3.9"]
+python_versions = ["3.10", "3.11", "3.12", "3.13"]
+nox.options.default_venv_backend = "uv"
 
 
-def activate_virtualenv_in_precommit_hooks(session):
+def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
     """Activate virtualenv in hooks installed by pre-commit.
     This function patches git hooks installed by pre-commit to activate the
     session's virtual environment. This allows pre-commit to locate hooks in
@@ -36,7 +39,9 @@ def activate_virtualenv_in_precommit_hooks(session):
         text = hook.read_text()
         bindir = repr(session.bin)[1:-1]  # strip quotes
         if not (
-            Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
+            Path("A") == Path("a")
+            and bindir.lower() in text.lower()
+            or bindir in text
         ):
             continue
 
@@ -59,28 +64,29 @@ def activate_virtualenv_in_precommit_hooks(session):
         hook.write_text("\n".join(lines))
 
 
-@noxsession(python=python_versions)
-def tests(session):
+@session(python=python_versions, uv_groups=["dev"], uv_extras=["data"])
+def tests(session: Session) -> None:
     """Run the test suite."""
-    session.install(".[data]")
-    session.install("pytest", "nox", "nox-poetry")
     session.run("pytest", *session.posargs)
 
 
-@noxsession(python="3.9")
-def black(session):
-    """Run black code formatter."""
+@session(python="3.13", uv_groups=["dev"])
+def format(session: Session) -> None:
+    """Run Ruff formatter."""
     args = session.posargs or locations
-    session.install("black")
-    session.run("black", *args)
+    session.run("ruff", "format", *args)
 
 
-@noxsession(name="pre-commit", python="3.9")
-def precommit(session):
+@session(python="3.13", uv_groups=["dev"])
+def lint(session: Session) -> None:
+    """Run Ruff lint checks."""
+    args = session.posargs or locations
+    session.run("ruff", "check", *args)
+
+
+@session(name="pre-commit", python="3.13", uv_groups=["dev"])
+def precommit(session: Session) -> None:
     args = session.posargs or ["run", "--all-files", "--show-diff-on-failure"]
-    session.install(
-        "pre-commit", "black", "flake8", "doc8", "isort", "flake8-bugbear",
-    )
     session.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session)
