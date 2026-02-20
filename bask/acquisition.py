@@ -355,7 +355,7 @@ class PVRS(FullGPAcquisition):
                 L_gpu = cp.linalg.cholesky(K_gpu)
                 # print(f"L-L_gpu= {L-cp.asnumpy(L_gpu)}")
                 L = cp.asnumpy(L_gpu)
-            else
+            else:
                 L = cholesky(K, lower=True)
             K_trans = gp.kernel_(thompson_points, X_train_aug)
             v = cho_solve((L, True), K_trans.T)
