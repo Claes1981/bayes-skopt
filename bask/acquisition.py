@@ -8,7 +8,13 @@ from sklearn.utils import check_random_state
 
 from bask.utils import get_progress_bar, validate_zeroone
 
-import cupy as cp
+try:
+    import cupy as cp
+
+    HAS_CUPY = True
+except ImportError:
+    HAS_CUPY = False
+    cp = None
 
 from line_profiler import profile
 
@@ -344,11 +350,13 @@ class PVRS(FullGPAcquisition):
             if np.iterable(gp.alpha):
                 K[np.diag_indices_from(K)] += np.concatenate([gp.alpha, [0.0]])
             # print(f"Shape of K: {K.shape}")
-            K_gpu = cp.asarray(K)
-            # L = cholesky(K, lower=True)
-            L_gpu = cp.linalg.cholesky(K_gpu)
-            # print(f"L-L_gpu= {L-cp.asnumpy(L_gpu)}")
-            L = cp.asnumpy(L_gpu)
+            if HAS_CUPY:
+                K_gpu = cp.asarray(K)
+                L_gpu = cp.linalg.cholesky(K_gpu)
+                # print(f"L-L_gpu= {L-cp.asnumpy(L_gpu)}")
+                L = cp.asnumpy(L_gpu)
+            else
+                L = cholesky(K, lower=True)
             K_trans = gp.kernel_(thompson_points, X_train_aug)
             v = cho_solve((L, True), K_trans.T)
             cov = K_trans.dot(v)
