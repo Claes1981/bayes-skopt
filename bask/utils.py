@@ -9,6 +9,24 @@ from skopt.learning.gaussian_process.kernels import ConstantKernel, Matern
 from bask.init import r2_sequence
 from bask.priors import make_roundflat
 
+
+def _halfnorm_prior(x):
+    """Half-normal prior distribution on signal variance.
+
+    This function assumes that the input x is sampled in log-space,
+    which is why the change of variables is necessary.
+    """
+    return (
+        halfnorm(scale=2.0).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+    )
+
+
+# Pre-create the standard lengthscale prior with default parameters
+# This allows it to be pickled since it's defined at module level. 
+# It will then also be possible to parallellize works including the function.
+_LENGTHSCALE_PRIOR = None
+
+
 __all__ = [
     "geometric_median",
     "r2_sequence",
@@ -16,6 +34,24 @@ __all__ = [
     "construct_default_kernel",
     "validate_zeroone",
 ]
+
+
+# Initialize the global lengthscale prior when this module loads
+# For common optimization problems, we expect the lengthscales to
+# lie in the range [0.1, 0.6]. The round-flat prior allows values
+# outside the range, if supported by enough datapoints.
+if _LENGTHSCALE_PRIOR is None:
+    roundflat = make_roundflat(
+        lower_bound=0.1,
+        upper_bound=0.6,
+        lower_steepness=2.0,
+        upper_steepness=8.0,
+    )
+
+    def _lengthscale_prior(x):
+        return roundflat(np.exp(x)) + x
+
+    _LENGTHSCALE_PRIOR = _lengthscale_prior
 
 
 def geometric_median(X, eps=1e-5):
@@ -87,37 +123,24 @@ def _recursive_priors(kernel, prior_list):
             if name == "WhiteKernel" and kernel.noise_level_bounds == "fixed":
                 return
             # We use a half-normal prior distribution on the signal variance and
-            # noise. The input x is sampled in log-space, which is why the
-            # change of variables is necessary.
+            # noise.
             # This prior assumes that the function values are standardized.
             # Note, that we do not know the structure of the kernel, which is
             # why this is just only a best guess.
-            prior_list.append(
-                lambda x: halfnorm(scale=2.0).logpdf(np.sqrt(np.exp(x)))
-                + x / 2.0
-                - np.log(2.0),
-            )
+            prior_list.append(_halfnorm_prior)
         elif name in ["Matern", "RBF"]:
             # Here we apply a round-flat prior distribution to any lengthscale
             # parameter we find. We assume the input variables are normalized
             # to lie in [0, 1].
-            # For common optimization problems, we expect the lengthscales to
-            # lie in the range [0.1, 0.6]. The round-flat prior allows values
-            # outside the range, if supported by enough datapoints.
             if isinstance(
                 kernel.length_scale, (collections.abc.Sequence, np.ndarray)
             ):
                 n_priors = len(kernel.length_scale)
             else:
                 n_priors = 1
-            roundflat = make_roundflat(
-                lower_bound=0.1,
-                upper_bound=0.6,
-                lower_steepness=2.0,
-                upper_steepness=8.0,
-            )
+            # Use the pre-defined global lengthscale prior
             for _ in range(n_priors):
-                prior_list.append(lambda x: roundflat(np.exp(x)) + x)
+                prior_list.append(_LENGTHSCALE_PRIOR)
         else:
             raise NotImplementedError(
                 f"Unable to guess priors for this kernel: {kernel}."
