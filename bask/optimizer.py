@@ -624,8 +624,8 @@ class Optimizer:
 
     def optimum_intervals(
         self,
-        hdi_prob=0.95,
-        multimodal=True,
+        prob=0.95,
+        method="multimodal",
         opt_samples=200,
         space_samples=500,
         only_mean=True,
@@ -639,10 +639,10 @@ class Optimizer:
 
         Parameters
         ----------
-        hdi_prob : float, default=0.95
+        prob : float, default=0.95
             The total probability each interval should cover.
-        multimodal : bool, default=True
-            If True, more than one interval can be returned for one parameter.
+        method : , default="multimodal"
+            If "multimodal", more than one interval can be returned for one parameter.
         opt_samples : int, default=200
             Number of samples to generate from the optimum distribution.
         space_samples : int, default=500
@@ -685,7 +685,7 @@ class Optimizer:
 
         intervals = []
         for i, col in enumerate(X_opt.T):
-            raw_interval = hdi(col, hdi_prob=hdi_prob, multimodal=multimodal)
+            raw_interval = hdi(col, prob=prob, method=method)
             intervals.append(
                 self.space.dimensions[i].inverse_transform(raw_interval)
             )
